@@ -578,7 +578,7 @@ async function loadMeta() {
   const r = await fetch('exams/meta.json');
   const meta = await r.json();
   EXAMS = meta.map(m => ({...m, questions: null}));
-  loadMeta();
+  renderExamGrid();
 }
 
 async function loadExamQuestions(id) {
