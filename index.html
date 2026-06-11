@@ -812,6 +812,7 @@ function selectExam(exam) {
   document.getElementById('heroTitle').textContent = exam.title;
   document.getElementById('heroDesc').textContent = exam.desc;
   document.getElementById('studyBadge').textContent = exam.desc.split('·')[0].trim();
+  updateBadges();
 }
 
 function goLobby() {
