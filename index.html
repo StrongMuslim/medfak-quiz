@@ -1042,19 +1042,17 @@ function showResults() {
 
 
 // ── localStorage helpers ──
-function errKey(src) { return 'medfak_err_' + src + '_' + currentExam.id; }
-function statKey() { return 'medfak_stat_' + currentExam.id; }
-function getErrors(src) { try { return JSON.parse(localStorage.getItem(errKey(src))||'[]'); } catch(e){return[];} }
-function getStats()  { try { return JSON.parse(localStorage.getItem(statKey())||'[]'); } catch(e){return[];} }
-function saveErrors(src,arr) { localStorage.setItem(errKey(src), JSON.stringify(arr)); }
-function saveStats(arr)  { localStorage.setItem(statKey(), JSON.stringify(arr)); }
+function getErrors(src) { try { return JSON.parse(localStorage.getItem('medfak_err_'+src)||'[]'); } catch(e){return[];} }
+function getStats()  { try { return JSON.parse(localStorage.getItem('medfak_stat_global')||'[]'); } catch(e){return[];} }
+function saveErrors(src,arr) { localStorage.setItem('medfak_err_'+src, JSON.stringify(arr)); }
+function saveStats(arr)  { localStorage.setItem('medfak_stat_global', JSON.stringify(arr)); }
 
 function updateBadges() {
-  const errs = [...new Map([...getErrors('exam'),...getErrors('study')].map(e=>[e.question,e])).values()];
+  const total = getErrors('exam').length + getErrors('study').length;
   const stats = getStats();
   const eb = document.getElementById('errBadge');
   const sb = document.getElementById('statBadge');
-  if(eb) eb.textContent = errs.length + ' ошибок';
+  if(eb) eb.textContent = total + ' ошибок';
   if(sb) sb.textContent = stats.length + ' попыток';
 }
 
@@ -1062,7 +1060,7 @@ function updateBadges() {
 function saveErrorQuestion(q, src) {
   const errs = getErrors(src);
   if(!errs.find(e=>e.question===q.question)) {
-    errs.push(q);
+    errs.push({...q, _examTitle: currentExam ? currentExam.title : ''});
     saveErrors(src, errs);
   }
 }
