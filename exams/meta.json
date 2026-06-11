@@ -56,6 +56,14 @@
     "ready": true
   },
   {
+    "id": "akusherstvo",
+    "title": "Акушерство и гинекология",
+    "icon": "🤰",
+    "desc": "400 вопросов · 4 курс 8 семестр",
+    "color": "#ec4899",
+    "ready": true
+  },
+  {
     "id": "soon3",
     "title": "Скоро...",
     "icon": "📖",
