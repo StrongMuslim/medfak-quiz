@@ -132,6 +132,45 @@
   .badge-study { background:rgba(108,99,255,.2); color:#a78bfa; }
   .badge-exam { background:rgba(255,101,132,.2); color:#fb7185; }
 
+
+  /* ── SHARE POPUP ── */
+  .share-popup-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:9999; opacity:0; pointer-events:none;
+    transition:opacity .3s;
+  }
+  .share-popup-overlay.visible { opacity:1; pointer-events:all; }
+  .share-popup {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px 20px 0 0; padding:28px 24px 36px;
+    width:100%; max-width:480px;
+    transform:translateY(100%); transition:transform .35s cubic-bezier(.4,0,.2,1);
+  }
+  .share-popup-overlay.visible .share-popup { transform:translateY(0); }
+  .share-popup-emoji { font-size:2.8rem; text-align:center; margin-bottom:12px; }
+  .share-popup h3 { font-size:1.15rem; font-weight:800; text-align:center; margin-bottom:8px; }
+  .share-popup p { color:var(--muted); font-size:.88rem; line-height:1.6; text-align:center; margin-bottom:20px; }
+  .share-popup-btns { display:flex; flex-direction:column; gap:10px; }
+  .share-btn-main {
+    background:linear-gradient(135deg,var(--accent),#a855f7);
+    color:#fff; border:none; border-radius:12px;
+    padding:14px; font-size:.95rem; font-weight:700;
+    cursor:pointer; transition:.2s;
+  }
+  .share-btn-main:hover { opacity:.9; transform:translateY(-1px); }
+  .share-btn-error {
+    background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.3);
+    color:#fca5a5; border-radius:12px;
+    padding:12px; font-size:.88rem; font-weight:600;
+    cursor:pointer; transition:.2s;
+  }
+  .share-btn-error:hover { background:rgba(248,113,113,.2); }
+  .share-btn-close {
+    background:transparent; border:none; color:var(--muted);
+    font-size:.82rem; cursor:pointer; padding:8px; margin-top:2px;
+  }
+
   /* ── QUIZ ── */
   .quiz-header { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   .mode-label { font-size:.82rem; color:var(--muted); }
@@ -563,6 +602,20 @@
       <div id="mistakesList" class="mistakes-list hidden"></div>
     </div>
   </div>
+
+<!-- SHARE POPUP -->
+<div class="share-popup-overlay" id="sharePopup" onclick="closeSharePopup(event)">
+  <div class="share-popup">
+    <div class="share-popup-emoji">👋</div>
+    <h3>Удачи на сессии!</h3>
+    <p>Увидимся в следующем семестре — я подгоню ещё много полезностей для тебя и твоих друзей 🚀<br><br>Расскажи однокурсникам — пусть тоже готовятся!</p>
+    <div class="share-popup-btns">
+      <button class="share-btn-main" onclick="shareBot()">📢 Поделиться с друзьями</button>
+      <button class="share-btn-error" onclick="reportError()">✏️ Нашёл ошибку — написать боту</button>
+      <button class="share-btn-close" onclick="closeSharePopup()">Закрыть</button>
+    </div>
+  </div>
+</div>
 
 </div>
 
@@ -1189,6 +1242,41 @@ function toggleMistakes() {
   } else {
     list.classList.add('hidden');
     btn.innerHTML=`📋 Разобрать ошибки: <span id="mistakesCount">${examMistakes.length}</span>`;
+  }
+}
+
+
+function showSharePopup() {
+  const last = localStorage.getItem('medfak_popup_shown');
+  const now = Date.now();
+  if(last && now - parseInt(last) < 24*60*60*1000) return; // раз в сутки
+  setTimeout(() => {
+    document.getElementById('sharePopup').classList.add('visible');
+  }, 1200);
+  localStorage.setItem('medfak_popup_shown', now);
+}
+
+function closeSharePopup(e) {
+  if(!e || e.target === document.getElementById('sharePopup') || !e.target.closest('.share-popup')) {
+    document.getElementById('sharePopup').classList.remove('visible');
+  }
+}
+
+function shareBot() {
+  const text = 'Зацени сайт для подготовки к экзаменам — 400+ вопросов по каждому предмету, учебный режим и экзамен на время. Реально помогает 🫀\n\n👉 https://strongmuslim.github.io/medfak-quiz';
+  if(window.Telegram?.WebApp) {
+    Telegram.WebApp.openTelegramLink('https://t.me/share/url?url=https://strongmuslim.github.io/medfak-quiz&text=' + encodeURIComponent('Зацени сайт для подготовки к экзаменам 🫀'));
+  } else {
+    navigator.clipboard?.writeText(text).then(() => alert('Ссылка скопирована!')).catch(() => {});
+  }
+}
+
+function reportError() {
+  closeSharePopup();
+  if(window.Telegram?.WebApp) {
+    Telegram.WebApp.openTelegramLink('https://t.me/medfak_kg_bot');
+  } else {
+    window.open('https://t.me/medfak_kg_bot', '_blank');
   }
 }
 
