@@ -754,11 +754,11 @@ function selectExam(exam) {
   hide('lobby');
   show('modeScreen');
   document.getElementById('modeTitle').textContent = exam.title;
-  document.getElementById('modeSubtitle').textContent = exam.questions.length + ' вопросов';
+  document.getElementById('modeSubtitle').textContent = exam.desc;
   document.getElementById('heroIcon').textContent = exam.icon;
   document.getElementById('heroTitle').textContent = exam.title;
   document.getElementById('heroDesc').textContent = exam.desc;
-  document.getElementById('studyBadge').textContent = exam.questions.length + ' вопросов';
+  document.getElementById('studyBadge').textContent = exam.desc.split('·')[0].trim();
 }
 
 function goLobby() {
@@ -783,7 +783,7 @@ function goModeScreen() {
 }
 
 
-async async function startStudy() {
+async function startStudy() {
   mode = 'study';
   if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
   sessionQ = shuffle(currentExam.questions);
@@ -796,7 +796,7 @@ async async function startStudy() {
   renderQuestion();
 }
 
-function startExam() {
+async function startExam() {
   mode = 'exam';
   if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
   sessionQ = shuffle(currentExam.questions).slice(0,50);
@@ -823,7 +823,7 @@ async function actuallyStartExam() {
   renderQuestion();
 }
 
-function retryExam() {
+async function retryExam() {
   if (mode === 'study') { startStudy(); return; }
   if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
   sessionQ = shuffle(currentExam.questions).slice(0,50);
@@ -956,6 +956,9 @@ function checkMultiAnswers() {
       const correctTexts=opts.filter((_,i)=>correctSet.has(i)).map(o=>o.text.replace(/^[A-Eа-еА-Е][.)]\s*/,''));
       const chosenTexts=[...selected].map(i=>opts[i].text.replace(/^[A-Eа-еА-Е][.)]\s*/,''));
       examMistakes.push({q:sessionQ[current].question,chosen:chosenTexts.join(', '),correct:correctTexts.join(', ')});
+      saveErrorQuestion(sessionQ[current],'exam');
+    } else {
+      saveErrorQuestion(sessionQ[current],'study');
     }
   }
 
