@@ -883,7 +883,7 @@ async function retryExam() {
   sessionQ = shuffle(currentExam.questions).slice(0,50);
   current = 0; score = 0; wrong = 0; examMistakes = [];
   hide('results');
-  actuallyStartExam();
+  await actuallyStartExam();
 }
 
 function updateTimer() {
@@ -1196,6 +1196,7 @@ function clearStats() {
 }
 
 async function startBrowse() {
+  if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
   hide('modeScreen'); show('browseScreen');
   document.getElementById('browseTitleText').textContent = currentExam.title;
   document.getElementById('browseSearch').value = '';
