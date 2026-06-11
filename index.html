@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>Медицина — Подготовка к экзаменам</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --card: #1e2237;
+    --border: #2e3355;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --green: #4ade80;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --radius: 14px;
+    --yellow: #fbbf24;
+    --purple: #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(108,99,255,.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255,101,132,.05) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  #app { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .hidden { display: none !important; }
+
+  /* ── LOBBY ── */
+  .lobby { padding: 40px 0 20px; }
+  .lobby-header { text-align: center; margin-bottom: 36px; }
+  .lobby-logo { font-size: 3rem; margin-bottom: 10px; animation: pulse 3s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  .lobby-header h1 {
+    font-size: 1.7rem; font-weight: 800;
+    background: linear-gradient(135deg,#6c63ff,#ff6584);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .lobby-header p { color: var(--muted); font-size: .95rem; }
+
+  .exam-list { display: flex; flex-direction: column; gap: 14px; }
+  .exam-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 20px 20px 20px;
+    cursor: pointer; transition: all .22s;
+    display: flex; align-items: center; gap: 16px;
+    position: relative; overflow: hidden;
+  }
+  .exam-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,99,255,.2); }
+  .exam-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(108,99,255,.1), transparent);
+    opacity: 0; transition: .22s;
+  }
+  .exam-card:hover::after { opacity: 1; }
+  .exam-card.coming-soon { opacity: .45; cursor: not-allowed; }
+  .exam-card.coming-soon:hover { transform: none; box-shadow: none; }
+  .exam-card.coming-soon::after { display: none; }
+  .exam-icon {
+    font-size: 2rem; width: 52px; height: 52px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px; background: var(--surface);
+  }
+  .exam-info { flex: 1; min-width: 0; }
+  .exam-info h2 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .exam-info p { color: var(--muted); font-size: .82rem; }
+  .exam-tag {
+    font-size: .72rem; font-weight: 600; padding: 3px 9px;
+    border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+  .tag-ready { background: rgba(108,99,255,.2); color: #a78bfa; }
+  .tag-soon { background: rgba(148,163,184,.1); color: var(--muted); }
+  .exam-arrow { color: var(--muted); font-size: 1.1rem; flex-shrink: 0; }
+
+  /* ── MODE SELECT ── */
+  .mode-screen { }
+  .screen-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .back-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); padding: 8px 14px; border-radius: 8px;
+    cursor: pointer; font-size: .9rem; transition: .2s; flex-shrink: 0;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--accent); }
+  .screen-title { font-size: 1rem; font-weight: 700; }
+  .screen-subtitle { font-size: .8rem; color: var(--muted); }
+
+  .exam-hero {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .exam-hero .hero-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .exam-hero h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
+  .exam-hero p { color: var(--muted); font-size: .88rem; }
+
+  .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  @media(max-width:420px){ .mode-cards{ grid-template-columns:1fr; } }
+  .mode-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 18px;
+    cursor: pointer; transition: all .22s; text-align: left;
+    position: relative; overflow: hidden;
+  }
+  .mode-card::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(108,99,255,.12),transparent);
+    opacity:0; transition:.22s;
+  }
+  .mode-card:hover { transform:translateY(-3px); border-color:var(--accent); box-shadow:0 8px 24px rgba(108,99,255,.2); }
+  .mode-card:hover::after { opacity:1; }
+  .mode-card.exam-card-mode:hover { border-color:var(--accent2); box-shadow:0 8px 24px rgba(255,101,132,.2); }
+  .mode-card.exam-card-mode::after { background:linear-gradient(135deg,rgba(255,101,132,.12),transparent); }
+  .mode-icon { font-size: 2rem; margin-bottom: 12px; }
+  .mode-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .mode-card p { color: var(--muted); font-size: .82rem; line-height: 1.5; }
+  .mode-badge { display:inline-block; margin-top:10px; padding:3px 9px; border-radius:999px; font-size:.72rem; font-weight:600; }
+  .badge-study { background:rgba(108,99,255,.2); color:#a78bfa; }
+  .badge-exam { background:rgba(255,101,132,.2); color:#fb7185; }
+
+  /* ── QUIZ ── */
+  .quiz-header { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .mode-label { font-size:.82rem; color:var(--muted); }
+  .timer {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--card); border:1px solid var(--border);
+    padding:5px 12px; border-radius:999px; font-size:.88rem; font-weight:600;
+    margin-left:auto;
+  }
+  .timer.urgent { color:var(--red); border-color:var(--red); animation:blink 1s step-end infinite; }
+  @keyframes blink { 50%{opacity:.5} }
+
+  .progress-wrap { margin-bottom:22px; }
+  .progress-info { display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); margin-bottom:7px; }
+  .progress-bar { height:4px; background:var(--border); border-radius:999px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:999px; transition:width .4s cubic-bezier(.4,0,.2,1); }
+
+  .question-num { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:9px; }
+  .question-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:22px; margin-bottom:16px;
+  }
+  .question-text { font-size:1rem; line-height:1.65; font-weight:500; }
+
+  .options { display:flex; flex-direction:column; gap:9px; margin-bottom:20px; }
+  .option-btn {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:13px 16px;
+    text-align:left; cursor:pointer; font-size:.92rem; line-height:1.5;
+    color:var(--text); transition:all .16s; display:flex; align-items:flex-start; gap:11px;
+  }
+  .option-btn:hover:not(.disabled) { border-color:var(--accent); background:rgba(108,99,255,.08); transform:translateX(3px); }
+  .option-letter {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:26px; height:26px; border-radius:6px;
+    background:var(--border); color:var(--muted); font-weight:700; font-size:.78rem;
+    transition:.16s; flex-shrink:0; margin-top:1px;
+  }
+  .option-btn:hover:not(.disabled) .option-letter { background:var(--accent); color:#fff; }
+  .option-btn.correct { border-color:var(--green); background:rgba(74,222,128,.1); }
+  .option-btn.correct .option-letter { background:var(--green); color:#0f1117; }
+  .option-btn.wrong { border-color:var(--red); background:rgba(248,113,113,.1); }
+  .option-btn.wrong .option-letter { background:var(--red); color:#fff; }
+  .option-btn.reveal-correct { border-color:var(--green); background:rgba(74,222,128,.06); }
+  .option-btn.reveal-correct .option-letter { background:rgba(74,222,128,.3); color:var(--green); }
+  .option-btn.selected { border-color:var(--accent); background:rgba(108,99,255,.15); }
+  .option-btn.selected .option-letter { background:var(--accent); color:#fff; }
+  .option-btn.disabled { cursor:default; }
+  /* ── MULTI-ANSWER ── */
+  .multi-badge {
+    display:inline-flex; align-items:center; gap:7px;
+    padding:7px 13px; border-radius:8px; font-size:.82rem; font-weight:600;
+    margin-bottom:14px;
+  }
+  .multi-badge.yellow { background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.4); color:var(--yellow); }
+  .multi-badge.purple { background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.35); color:var(--purple); }
+  .option-btn.correct-hit { border-color:var(--green); background:rgba(74,222,128,.12); }
+  .option-btn.correct-hit .option-letter { background:var(--green); color:#0f1117; }
+  .option-btn.wrong-hit { border-color:var(--red); background:rgba(248,113,113,.1); }
+  .option-btn.wrong-hit .option-letter { background:var(--red); color:#fff; }
+  .option-btn.missed { border-color:rgba(74,222,128,.4); background:rgba(74,222,128,.06); }
+  .option-btn.missed .option-letter { background:rgba(74,222,128,.3); color:var(--green); }
+
+
+  .feedback {
+    padding:13px 16px; border-radius:10px; font-size:.92rem; margin-bottom:18px;
+    display:none; animation:fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+  .feedback.correct { background:rgba(74,222,128,.12); border:1px solid rgba(74,222,128,.3); color:#86efac; }
+  .feedback.wrong { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.3); color:#fca5a5; }
+
+  .nav-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .btn { padding:11px 22px; border-radius:10px; font-size:.92rem; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),#8b5cf6); color:#fff; }
+  .btn-primary:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 4px 14px rgba(108,99,255,.4); }
+  .btn-secondary { background:var(--card); border:1px solid var(--border); color:var(--text); }
+  .btn-secondary:hover { border-color:var(--accent); }
+
+  /* ── RESULTS ── */
+  .results { text-align:center; padding:32px 0; }
+  .result-ring { position:relative; width:150px; height:150px; margin:0 auto 24px; }
+  .result-ring svg { transform:rotate(-90deg); }
+  .result-ring circle { fill:none; stroke-width:9; }
+  .ring-bg { stroke:var(--border); }
+  .ring-fill { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1); }
+  .ring-fill.good { stroke:var(--green); }
+  .ring-fill.ok { stroke:#fbbf24; }
+  .ring-fill.bad { stroke:var(--red); }
+  .ring-percent { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-percent .pct { font-size:1.9rem; font-weight:800; }
+  .ring-percent .lbl { font-size:.72rem; color:var(--muted); }
+  .results h2 { font-size:1.5rem; font-weight:800; margin-bottom:7px; }
+  .results .tagline { font-size:.92rem; color:var(--muted); margin-bottom:28px; }
+  .result-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:380px; margin:0 auto 28px; }
+  .result-stat { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .result-stat .val { font-size:1.5rem; font-weight:800; }
+  .result-stat .key { font-size:.72rem; color:var(--muted); margin-top:2px; }
+  .result-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  /* ── DUA BUTTON (lobby) ── */
+  .dua-btn {
+    position:absolute; top:16px; right:16px;
+    background:rgba(108,99,255,.15); border:1px solid rgba(108,99,255,.35);
+    border-radius:50%; width:42px; height:42px;
+    font-size:1.25rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .2s, transform .2s;
+  }
+  .dua-btn:hover { background:rgba(108,99,255,.3); transform:scale(1.08); }
+
+  /* ── DUA MODAL ── */
+  .dua-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.7);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; padding:24px; opacity:0; pointer-events:none;
+    transition:opacity .25s;
+  }
+  .dua-overlay.visible { opacity:1; pointer-events:all; }
+  .dua-modal {
+    background:var(--card); border:1px solid var(--border); border-radius:20px;
+    padding:32px 24px; max-width:360px; width:100%; text-align:center;
+    transform:scale(.92); transition:transform .25s;
+  }
+  .dua-overlay.visible .dua-modal { transform:scale(1); }
+  .dua-modal .dua-emoji { font-size:3rem; margin-bottom:12px; }
+  .dua-modal h3 { font-size:1.2rem; font-weight:800; margin-bottom:10px; }
+  .dua-modal p { font-size:.9rem; color:var(--muted); line-height:1.6; margin-bottom:20px; }
+  .dua-modal .dua-close {
+    background:var(--accent); color:#fff; border:none; border-radius:12px;
+    padding:12px 28px; font-size:.95rem; font-weight:700; cursor:pointer;
+    width:100%; transition:opacity .2s;
+  }
+  .dua-modal .dua-close:hover { opacity:.85; }
+
+  /* ── DUA CARD (results) ── */
+  .dua-card {
+    margin:24px auto 0; max-width:400px;
+    background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(108,99,255,.04));
+    border:1px solid rgba(108,99,255,.3); border-radius:16px;
+    padding:20px 18px; text-align:center;
+  }
+  .dua-card .dua-card-emoji { font-size:2rem; margin-bottom:8px; }
+  .dua-card p { font-size:.88rem; color:var(--muted); line-height:1.6; margin:0; }
+  .dua-card strong { color:#e2e8f0; }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position:fixed; top:-10px;
+    animation: fall linear forwards;
+    z-index:9999; pointer-events:none; border-radius:2px;
+  }
+  @keyframes fall { to { transform:translateY(105vh) rotate(720deg); opacity:0; } }
+
+  /* ── ERRORS & STATS SCREENS ── */
+  .errors-empty { text-align:center; padding:40px 0; color:var(--muted); font-size:.9rem; }
+  .errors-empty .big { font-size:2.5rem; margin-bottom:10px; }
+  .stat-history { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .stat-row { background:var(--card); border-radius:12px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border); }
+  .stat-row .s-date { font-size:.78rem; color:var(--muted); }
+  .stat-row .s-score { font-weight:700; font-size:1rem; }
+  .stat-row .s-score.good { color:var(--green); }
+  .stat-row .s-score.ok { color:#fbbf24; }
+  .stat-row .s-score.bad { color:var(--red); }
+  .stat-summary { background:var(--card); border-radius:14px; padding:18px; margin-bottom:14px; border:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center; }
+  .stat-summary .sv { font-size:1.4rem; font-weight:800; }
+  .stat-summary .sk { font-size:.72rem; color:var(--muted); margin-top:2px; }
+  .clear-btn { width:100%; margin-top:12px; padding:10px; background:transparent; border:1px solid rgba(248,113,113,.3); color:#fca5a5; border-radius:10px; font-size:.82rem; cursor:pointer; }
+  .clear-btn:hover { background:rgba(248,113,113,.08); }
+
+  /* ── BROWSE MODE ── */
+  .browse-list { display:flex; flex-direction:column; gap:12px; padding-bottom:40px; }
+  .browse-item { background:var(--card); border-radius:14px; padding:16px; border:1px solid var(--border); }
+  .browse-num { font-size:.72rem; color:var(--muted); font-weight:700; margin-bottom:6px; letter-spacing:.05em; }
+  .browse-q { font-size:.9rem; color:#e2e8f0; line-height:1.5; margin-bottom:10px; font-weight:600; }
+  .browse-opt { font-size:.82rem; padding:5px 10px; border-radius:8px; margin-bottom:3px; color:var(--muted); }
+  .browse-opt.correct { background:rgba(74,222,128,.12); color:#4ade80; font-weight:600; }
+  .browse-search { width:100%; padding:10px 14px; background:var(--card); border:1px solid var(--border);
+    border-radius:12px; color:#e2e8f0; font-size:.9rem; margin-bottom:14px; outline:none; box-sizing:border-box; }
+  .browse-search:focus { border-color:var(--accent); }
+
+  /* ── PRE-EXAM DUA SCREEN ── */
+  .dua-exam-card {
+    background:var(--card); border-radius:16px; padding:24px 20px;
+    margin:20px 0; border:1px solid rgba(108,99,255,.2);
+  }
+  .dua-exam-label {
+    font-size:.78rem; color:var(--muted); letter-spacing:.05em;
+    text-transform:uppercase; margin-bottom:20px;
+  }
+  .dua-exam-row { margin-bottom:16px; }
+  .dua-exam-arabic {
+    font-size:1.55rem; text-align:right; direction:rtl;
+    color:#c4b5fd; font-weight:700; margin-bottom:4px; line-height:1.6;
+  }
+  .dua-exam-translit { font-size:.95rem; color:#e2e8f0; font-style:italic; margin-bottom:3px; }
+  .dua-exam-meaning { font-size:.84rem; color:var(--muted); }
+  .dua-exam-divider { height:1px; background:rgba(108,99,255,.15); margin:18px 0; }
+  .dua-barakat {
+    margin-top:18px; padding:13px 16px;
+    background:rgba(108,99,255,.1); border:1px solid rgba(108,99,255,.22);
+    border-radius:12px; text-align:center;
+  }
+  .dua-barakat-arabic { font-size:1.45rem; font-weight:700; color:#c4b5fd; margin-bottom:4px; }
+  .dua-barakat-note { font-size:.8rem; color:var(--muted); }
+
+  /* ── MISTAKES REVIEW ── */
+  #mistakesSection { margin-top:20px; }
+  .btn-outline {
+    background:transparent; border:1px solid rgba(108,99,255,.4); color:var(--accent);
+    border-radius:12px; padding:12px 20px; font-size:.9rem; font-weight:600;
+    cursor:pointer; width:100%; transition:all .2s;
+  }
+  .btn-outline:hover { background:rgba(108,99,255,.08); }
+  .mistakes-list { margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+  .mistake-item {
+    background:var(--card); border-radius:12px; padding:14px 16px;
+    border-left:3px solid var(--red); text-align:left;
+  }
+  .mistake-num {
+    display:inline-block; background:rgba(248,113,113,.2); color:#fca5a5;
+    border-radius:6px; font-size:.73rem; font-weight:700; padding:1px 7px; margin-right:7px;
+  }
+  .mistake-q { font-size:.86rem; color:#e2e8f0; margin-bottom:8px; line-height:1.5; }
+  .mistake-wrong { font-size:.82rem; color:#fca5a5; margin-bottom:4px; }
+  .mistake-right { font-size:.82rem; color:#4ade80; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOBBY: выбор экзамена -->
+  <div id="lobby" class="lobby" style="position:relative">
+    <button class="dua-btn" onclick="openDua()" title="Сделай дуа за автора 🤲">🤲</button>
+    <div class="lobby-header">
+      <div class="lobby-logo">🏥</div>
+      <h1>Подготовка к экзаменам</h1>
+      <p>Выбери предмет и начни готовиться</p>
+    </div>
+    <div class="exam-list" id="examList"></div>
+    <a href="https://t.me/medfak_kg_bot" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;padding:13px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);border-radius:14px;color:#a78bfa;text-decoration:none;font-size:.9rem;font-weight:600;">
+      <span style="font-size:1.2rem">✈️</span> Открыть бота в Telegram
+    </a>
+  </div>
+
+  <!-- DUA MODAL -->
+  <div class="dua-overlay" id="duaOverlay" onclick="closeDua(event)">
+    <div class="dua-modal">
+      <div class="dua-emoji">🤲</div>
+      <h3>Маленькая просьба</h3>
+      <p>
+        Я не медик и живу в другой стране. Сделал этот сайт для жены — чтобы было легче готовиться к экзаменам.<br><br>
+        Потом подумал: если есть и может помочь другим — зачем держать только у себя.<br><br>
+        Если оказалось полезным — сделай дуа за автора и его жену 💍<br>Пусть Аллах даст им барака в браке и жизни.
+      </p>
+      <div class="dua-barakat">
+        <div class="dua-barakat-arabic">اللهم بارك</div>
+        <div class="dua-barakat-note">«Аллохумма барик» — «О Аллах, даруй благословение»</div>
+      </div>
+      <button class="dua-close" onclick="closeDua()" style="margin-top:18px;">Амин 🤍</button>
+    </div>
+  </div>
+
+  <!-- MODE: выбор режима для конкретного экзамена -->
+  <div id="modeScreen" class="mode-screen hidden">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goLobby()">← Назад</button>
+      <div>
+        <div class="screen-title" id="modeTitle"></div>
+        <div class="screen-subtitle" id="modeSubtitle"></div>
+      </div>
+    </div>
+    <div class="exam-hero">
+      <div class="hero-icon" id="heroIcon"></div>
+      <h2 id="heroTitle"></h2>
+      <p id="heroDesc"></p>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startStudy()">
+        <div class="mode-icon">📖</div>
+        <h3>Учебный режим</h3>
+        <p>Все вопросы, случайный порядок. Ответ показывается сразу.</p>
+        <span class="mode-badge badge-study" id="studyBadge"></span>
+      </div>
+      <div class="mode-card exam-card-mode" onclick="startExam()">
+        <div class="mode-icon">🎯</div>
+        <h3>Экзамен</h3>
+        <p>50 случайных вопросов на время — как на реальном экзамене.</p>
+        <span class="mode-badge badge-exam">50 вопросов · 25 мин</span>
+      </div>
+
+      <div class="mode-card" onclick="showErrors()" style="border-color:rgba(248,113,113,.3)">
+        <div class="mode-icon">❌</div>
+        <h3>Мои ошибки</h3>
+        <p>Вопросы на которых ошибался — повторяй слабые места.</p>
+        <span class="mode-badge" style="background:rgba(248,113,113,.15);color:#fca5a5;" id="errBadge">0 ошибок</span>
+      </div>
+      <div class="mode-card" onclick="showStats()" style="border-color:rgba(96,165,250,.3)">
+        <div class="mode-icon">📊</div>
+        <h3>Статистика</h3>
+        <p>История результатов экзаменов.</p>
+        <span class="mode-badge" style="background:rgba(96,165,250,.15);color:#60a5fa;" id="statBadge">0 попыток</span>
+      </div>
+      <div class="mode-card" onclick="startBrowse()" style="border-color:rgba(251,191,36,.3)">
+        <div class="mode-icon">📋</div>
+        <h3>Листать</h3>
+        <p>Все вопросы с ответами — просматривай и ищи.</p>
+        <span class="mode-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;">Все вопросы</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRE-EXAM DUA -->
+  <div id="preExamDua" class="hidden">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goModeScreen()">← Назад</button>
+      <div>
+        <div class="screen-title">Перед экзаменом</div>
+        <div class="screen-subtitle">50 вопросов · 25 минут</div>
+      </div>
+    </div>
+    <div class="dua-exam-card">
+      <div class="dua-exam-label">Обратитесь к Аллаху с дуа</div>
+      <div class="dua-exam-row">
+        <div class="dua-exam-arabic">رَبِّ زِدْنِي عِلْمًا</div>
+        <div class="dua-exam-translit">Рабби зидни 'ильма</div>
+        <div class="dua-exam-meaning">«Господь мой, прибавь мне знаний»</div>
+      </div>
+      <div class="dua-exam-divider"></div>
+      <div class="dua-exam-row">
+        <div class="dua-exam-arabic">بِسْمِ اللهِ، تَوَكَّلْتُ عَلَى الله</div>
+        <div class="dua-exam-translit">Бисмиллях, таваккальту 'аля Ллох</div>
+        <div class="dua-exam-meaning">«С именем Аллаха, уповаю на Аллаха»</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="actuallyStartExam()">Бисмиллях — начать экзамен 🎯</button>
+  </div>
+
+
+  <!-- BROWSE -->
+  <div id="browseScreen" class="hidden">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goModeScreen()">← Назад</button>
+      <div><div class="screen-title" id="browseTitleText"></div></div>
+    </div>
+    <input class="browse-search" id="browseSearch" placeholder="🔍 Поиск по вопросам..." oninput="filterBrowse(this.value)">
+    <div class="browse-list" id="browseList"></div>
+  </div>
+
+  <!-- ERRORS SCREEN -->
+  <div id="errorsScreen" class="hidden">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goModeScreen()">← Назад</button>
+      <div><div class="screen-title">Мои ошибки</div></div>
+    </div>
+    <div id="errorsContent"></div>
+  </div>
+
+  <!-- STATS SCREEN -->
+  <div id="statsScreen" class="hidden">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goModeScreen()">← Назад</button>
+      <div><div class="screen-title">Статистика</div></div>
+    </div>
+    <div id="statsContent"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="hidden">
+    <div class="quiz-header">
+      <button class="back-btn" onclick="goModeScreen()">← Назад</button>
+      <span class="mode-label" id="modeLabelText"></span>
+      <div class="timer hidden" id="timer">⏱ <span id="timerVal">25:00</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="progressText">Вопрос 1 из 50</span>
+        <span id="scoreText">✓ 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="question-num" id="questionNum">Вопрос 1</div>
+    <div class="question-card">
+      <div class="question-text" id="questionText"></div>
+    </div>
+    <div id="multiBadge" class="hidden"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-row">
+      <button class="btn btn-primary hidden" id="nextBtn" onclick="nextQuestion()">Следующий →</button>
+      <button class="btn btn-secondary hidden" id="skipBtn" onclick="skipQuestion()">Пропустить</button>
+      <button class="btn btn-primary hidden" id="checkBtn" onclick="checkMultiAnswers()">Проверить ✓</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="results hidden">
+    <div class="result-ring">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle class="ring-bg" cx="75" cy="75" r="65"/>
+        <circle class="ring-fill" id="ringFill" cx="75" cy="75" r="65"
+          stroke-dasharray="408.41" stroke-dashoffset="408.41"/>
+      </svg>
+      <div class="ring-percent">
+        <span class="pct" id="resultPct">0%</span>
+        <span class="lbl">результат</span>
+      </div>
+    </div>
+    <h2 id="resultTitle"></h2>
+    <p class="tagline" id="resultTagline"></p>
+    <div class="result-grid">
+      <div class="result-stat"><div class="val" id="resCorrect">0</div><div class="key">Правильно</div></div>
+      <div class="result-stat"><div class="val" id="resWrong">0</div><div class="key">Неправильно</div></div>
+      <div class="result-stat"><div class="val" id="resTotal">0</div><div class="key">Всего</div></div>
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-primary" id="retryBtn" onclick="retryExam()">Ещё раз 🔄</button>
+      <button class="btn btn-secondary" onclick="goLobby()">Все экзамены 🏥</button>
+    </div>
+    <div class="dua-card">
+      <div class="dua-card-emoji">🤲</div>
+      <p>Если сайт был полезен — сделай дуа за автора.<br><strong>Он скоро женится 💍</strong> — пусть Аллах даст ему барака в браке и жизни.</p>
+      <div class="dua-barakat" style="margin-top:14px;">
+        <div class="dua-barakat-arabic">اللهم بارك</div>
+        <div class="dua-barakat-note">«Аллохумма барик» — «О Аллах, даруй благословение»</div>
+      </div>
+    </div>
+    <div id="mistakesSection" class="hidden">
+      <button class="btn-outline" onclick="toggleMistakes()">📋 Разобрать ошибки: <span id="mistakesCount">0</span></button>
+      <div id="mistakesList" class="mistakes-list hidden"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  ДАННЫЕ ЭКЗАМЕНОВ
+//  Чтобы добавить новый экзамен — добавь объект в этот массив
+// ════════════════════════════════════════════
+let EXAMS = [];
+let _examCache = {};
+
+async function loadMeta() {
+  const r = await fetch('exams/meta.json');
+  const meta = await r.json();
+  EXAMS = meta.map(m => ({...m, questions: null}));
+  loadMeta();
+}
+
+async function loadExamQuestions(id) {
+  if (_examCache[id]) return _examCache[id];
+  const r = await fetch(`exams/${id}.json`);
+  const qs = await r.json();
+  _examCache[id] = qs;
+  return qs;
+}
+
+// ════════════════════════════════════════════
+const ENCOURAGE_CORRECT = [
+  'Ты — машина! МРТ бы позавидовало 🧠⚡',
+  'H. pylori уже пишет завещание 🦠😱',
+  'Сам Боткин аплодирует из другого измерения 🎩👏',
+  'Препод ещё не знает, что ты его уже обогнал 😎',
+  'Поджелудочная одобряет этот ответ 💛',
+  'Зачётка сама себя подписывает 🚀',
+  'ЭКГ ровная как синус — и знания такие же 📈',
+  'Дексаметазон нервно курит в сторонке 💉',
+  'Пациенты в очереди уже чувствуют что им повезёт 🏥',
+  'Такой ответ даже ИИ не всегда выдаёт 🤖✨',
+  'Аускультация подтверждает: ты шикарен 🩺',
+  'На госэкзамен можно идти прямо сейчас 🎓',
+  'Резидентура тебя уже ждёт 🏆',
+  'Фонендоскоп тебе в подарок — заслужил 🎁',
+  'Пропранолол одобрил твой пульс знаний 💓',
+  'Нобелевский комитет делает пометку 📝',
+  'Синдром отличника прогрессирует — и это хорошо ⭐',
+  'Ты точнее УЗИ-аппарата последнего поколения 🔍',
+  'Рецептор нашёл своего лиганда — ты нашёл ответ 🔑',
+  'Биодоступность знаний: 100% ✅',
+  'Синаптическая связь установлена прочно 💡',
+  'Диагноз поставлен верно — пациент заочно благодарит 🙏',
+  'Клиренс ошибок — нулевой ✨',
+  'Гиппократ поставил тебе зачёт 📜',
+  'Профессор смотрит и молча ставит 5 ✍️',
+  'Фармакокинетика знаний: T½ → бесконечность ♾️',
+  'Кардиограмма знаний — без аритмий 📉',
+  'Нейрон буквально танцует от радости 🕺',
+  'Терапевтическая доза мотивации достигнута 💊',
+  'Дофамин вырабатывается — ты это заслужил 🧠',
+  'Интерн бы завис, а ты — нет. Разница! 🌟',
+  'Лимфоцит-Т отреагировал мгновенно — как ты 🎯',
+  'Холинэстераза не успела оглянуться ⚡',
+  'ЦНС обработала запрос быстрее нормы 🔥',
+  'РААС одобряет твой выбор 💪',
+  'Таблица Менделеева гордится тобой лично 🧪',
+  'Острый ум — как скальпель нейрохирурга 🔪',
+  'Ренин-ангиотензиновая система аплодирует 🫀',
+  'Диплом уже ищет тебя сам 🎓',
+  'Иммунитет против незнания выработан 🛡️',
+  'Один правильный ответ → один шаг к ординатуре 🏅',
+  'Атопический дерматит исчез от зависти 😂',
+  'Мозжечок сохраняет равновесие — знания тоже 🧠',
+  'Верно! Коллеги будут звонить за советом ☎️',
+  'Амоксициллин уступает место твоим знаниям 💊',
+  'Клетка мозга сказала: «вот это да!» 🧬',
+  'Тромбоцит прилип к правильному ответу 🩸',
+  'Форсированный выдох знаний — объём в норме 💨',
+  'Таких знаний хватит на всю ночную смену 🌙',
+  'Ни одна бактерия не устоит перед тобой 🦠✨'
+];
+const ENCOURAGE_WRONG = [
+  'Хаус тоже ошибался — и ничего, 8 сезонов отснял 🩺',
+  'Даже Флеминг случайно открыл пенициллин — ты на верном пути 🧫',
+  'Нейтрофил бы не сдался. И ты не сдавайся 🔥',
+  'Печень регенерирует. Знания — тоже 🫀',
+  'Wikipedia иногда врёт, ты не одинок 😅',
+  'На дежурстве точно запомнишь этот ответ 🌙',
+  'Атропин не действует с первого раза — зато потом работает 💊',
+  'Ошибка — это просто синапс, который ещё не укрепился 🧠',
+  'Боткинская болезнь тоже не сразу диагностируется 😌',
+  'Резистентность к ошибкам вырабатывается именно так 🛡️',
+  'Это был ложноположительный результат. Бывает 🔬',
+  'Даже анализ крови иногда пересдают 🩸',
+  'Запомни и иди дальше — ты почти там 💨',
+  'Зачётка ещё не потеряна, не переживай 📋',
+  'Ошибка зафиксирована, антитела уже формируются 🦠',
+  'Препод тоже в интернатуре ошибался — обещаем 👨‍⚕️',
+  'Дифдиагноз — сложная штука. Ещё раз! 🔍',
+  'Нейрон запомнил. Следующий раз — точно твой 🧠',
+  'Боль роста знаний — это норма 💪',
+  'Дерматолог бы сказал: «пройдёт» 😌',
+  'Буфер знаний восстановит рН ситуации 🧪',
+  'МКБ-10 ещё не внесла «незнание» в список диагнозов 📖',
+  'Мозг, как гепатоцит — восстанавливается 🫀',
+  'Первое дежурство тоже было не идеальным 🌙',
+  'Пусть это будет последняя ошибка по этой теме 📚',
+  'Кортизол поднялся — значит, мозг включился 😤',
+  'Ноцицептор сработал — теперь точно запомнишь 🔥',
+  'Один неверный шаг — девять верных впереди 🚶',
+  'Фибрилляция знаний — пройдёт после повторения ⚡',
+  'Следующий вопрос твой, не переживай 🎯',
+  'Ошибка — это кросс-тренинг для мозга 🏋️',
+  'Это не провал — это дифдиагностика в действии 🧩',
+  'Иммунная память формируется — займёт секунду ⏱️',
+  'Ампутирован только неверный ответ, остальное цело 🩹',
+  'Доза знаний ещё не терапевтическая — добавим! 💊',
+  'Медицина — наука повторения. Повторяй! 🔄',
+  'Как говорят на кафедре: «на экзамене ответишь лучше» 😏',
+  'Вирус сомнения лечится практикой 🦠',
+  'Пенициллин тоже не всем помогает с первого раза 🧫',
+  'Статистика на твоей стороне: 4 варианта уже отпали 📊',
+  'Рецептор не нашёл лиганда — но найдёт! 🔑',
+  'Артериальное давление знаний пока низкое — поднимем! 💉',
+  'Чем больше ошибок сейчас — тем меньше на экзамене 📝',
+  'Синапс ещё формируется — дай ему шанс 🔗',
+  'Ничего, Хаус бы тоже поставил не тот диагноз сначала 🩺',
+  'Рефлекс правильного ответа — дело практики 🏅',
+  'Тетрадь с конспектом плачет, но верит в тебя 📓',
+  'Флюктуация результатов — норма в начале сессии 📊',
+  'Ошибся? Значит мозг работал — а это главное 🧠',
+  'Пессимист видит ошибку — ты видишь опыт 🌟'
+];
+// Anti-repeat: не повторять последние 25 фраз
+const _recentC = [], _recentW = [];
+function pickEncourage(arr, recent) {
+  const avoid = new Set(recent);
+  const pool = arr.map((_,i)=>i).filter(i=>!avoid.has(i));
+  const idx = pool.length > 0
+    ? pool[Math.floor(Math.random()*pool.length)]
+    : Math.floor(Math.random()*arr.length);
+  recent.push(idx);
+  if(recent.length > 25) recent.shift();
+  return arr[idx];
+}
+
+
+
+let currentExam = null;
+let mode = 'study';
+let sessionQ = [];
+let current = 0, score = 0, wrong = 0;
+let examMistakes = [];
+let answered = false;
+let timerInterval = null, timeLeft = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── BUILD LOBBY ──
+function buildLobby() {
+  const list = document.getElementById('examList');
+  list.innerHTML = '';
+  EXAMS.forEach(exam => {
+    const card = document.createElement('div');
+    card.className = 'exam-card' + (exam.ready ? '' : ' coming-soon');
+    card.innerHTML = `
+      <div class="exam-icon">${exam.icon}</div>
+      <div class="exam-info">
+        <h2>${exam.title}</h2>
+        <p>${exam.desc}</p>
+      </div>
+      <span class="exam-tag ${exam.ready ? 'tag-ready' : 'tag-soon'}">${exam.ready ? 'Доступен' : 'Скоро'}</span>
+      ${exam.ready ? '<span class="exam-arrow">›</span>' : ''}
+    `;
+    if (exam.ready) card.onclick = () => selectExam(exam);
+    list.appendChild(card);
+  });
+}
+
+function selectExam(exam) {
+  currentExam = exam;
+  hide('lobby');
+  show('modeScreen');
+  document.getElementById('modeTitle').textContent = exam.title;
+  document.getElementById('modeSubtitle').textContent = exam.questions.length + ' вопросов';
+  document.getElementById('heroIcon').textContent = exam.icon;
+  document.getElementById('heroTitle').textContent = exam.title;
+  document.getElementById('heroDesc').textContent = exam.desc;
+  document.getElementById('studyBadge').textContent = exam.questions.length + ' вопросов';
+}
+
+function goLobby() {
+  clearInterval(timerInterval);
+  hide('modeScreen'); hide('quiz'); hide('results');
+  show('lobby');
+}
+
+function openDua() {
+  document.getElementById('duaOverlay').classList.add('visible');
+}
+function closeDua(e) {
+  if(!e || e.target===document.getElementById('duaOverlay') || e.currentTarget===document.querySelector('.dua-close')) {
+    document.getElementById('duaOverlay').classList.remove('visible');
+  }
+}
+
+function goModeScreen() {
+  clearInterval(timerInterval);
+  hide('quiz'); hide('results'); hide('preExamDua'); hide('browseScreen'); hide('errorsScreen'); hide('statsScreen'); updateBadges();
+  show('modeScreen');
+}
+
+
+async async function startStudy() {
+  mode = 'study';
+  if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
+  sessionQ = shuffle(currentExam.questions);
+  current = 0; score = 0; wrong = 0;
+  hide('modeScreen'); show('quiz');
+  hide('timer');
+  document.getElementById('modeLabelText').innerHTML = '📖 <strong>Учебный</strong>';
+  document.getElementById('skipBtn').classList.remove('hidden');
+  document.getElementById('scoreText').style.display = '';
+  renderQuestion();
+}
+
+function startExam() {
+  mode = 'exam';
+  if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
+  sessionQ = shuffle(currentExam.questions).slice(0,50);
+  current = 0; score = 0; wrong = 0; examMistakes = [];
+  hide('modeScreen');
+  show('preExamDua');
+}
+
+async function actuallyStartExam() {
+  hide('preExamDua');
+  show('quiz');
+  show('timer');
+  document.getElementById('modeLabelText').innerHTML = '🎯 <strong>Экзамен</strong>';
+  document.getElementById('skipBtn').classList.add('hidden');
+  document.getElementById('scoreText').style.display = 'none';
+  timeLeft = 1500;
+  updateTimer();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft<=0) { clearInterval(timerInterval); showResults(); }
+  }, 1000);
+  renderQuestion();
+}
+
+function retryExam() {
+  if (mode === 'study') { startStudy(); return; }
+  if(!currentExam.questions) currentExam.questions = await loadExamQuestions(currentExam.id);
+  sessionQ = shuffle(currentExam.questions).slice(0,50);
+  current = 0; score = 0; wrong = 0; examMistakes = [];
+  hide('results');
+  actuallyStartExam();
+}
+
+function updateTimer() {
+  const m=Math.floor(timeLeft/60), s=timeLeft%60;
+  document.getElementById('timerVal').textContent =
+    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const el=document.getElementById('timer');
+  if(timeLeft<=300) el.classList.add('urgent'); else el.classList.remove('urgent');
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = sessionQ[current];
+  const isMulti = !!q.multi;
+  const total = sessionQ.length;
+  document.getElementById('questionNum').textContent = `Вопрос ${current+1}`;
+  document.getElementById('questionText').textContent = q.question;
+  document.getElementById('progressText').textContent = `Вопрос ${current+1} из ${total}`;
+  document.getElementById('scoreText').textContent = `✓ ${score}`;
+  document.getElementById('progressFill').style.width = `${(current/total)*100}%`;
+  const fb=document.getElementById('feedback');
+  fb.style.display='none'; fb.className='feedback';
+  hide('nextBtn');
+
+  const badge = document.getElementById('multiBadge');
+  if (isMulti) {
+    const correctCount = q.options.filter(o=>o.correct).length;
+    const colorClass = correctCount >= 4 ? 'yellow' : 'purple';
+    badge.innerHTML = `<span>🎯</span> Выберите ${correctCount} правильных ответа`;
+    badge.className = `multi-badge ${colorClass}`;
+    badge.classList.remove('hidden');
+    const cb = document.getElementById('checkBtn');
+    cb.disabled = true; cb.classList.remove('hidden');
+    hide('skipBtn');
+  } else {
+    badge.classList.add('hidden');
+    hide('checkBtn');
+    if(mode==='study') show('skipBtn');
+  }
+
+  const container=document.getElementById('optionsContainer');
+  container.innerHTML='';
+  const opts=shuffle(q.options);
+  container._opts = opts;
+  container._sel = new Set();
+  opts.forEach((opt,idx) => {
+    const letter=String.fromCharCode(65+idx);
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    const cleanText=opt.text.replace(/^[A-Eа-еА-ЕабвгдАБВГД][.)]\s*/,'');
+    btn.innerHTML=`<span class="option-letter">${letter}</span><span>${cleanText}</span>`;
+    if(isMulti) btn.onclick=()=>toggleMultiOption(btn,idx,container);
+    else btn.onclick=()=>selectOption(btn,opt.correct,opts,container);
+    container.appendChild(btn);
+  });
+}
+
+function selectOption(btn,isCorrect,opts,container) {
+  if(answered) return;
+  answered=true;
+  container.querySelectorAll('.option-btn').forEach(b=>b.classList.add('disabled'));
+  const fb=document.getElementById('feedback');
+  if(isCorrect) {
+    score++;
+    if(mode!=='exam') {
+      btn.classList.add('correct');
+      const msg=pickEncourage(ENCOURAGE_CORRECT,_recentC);
+      fb.innerHTML=`<span style="margin-right:8px">✅</span>${msg}`;
+      fb.className='feedback correct';
+      fb.style.display='block';
+    }
+  } else {
+    wrong++;
+    if(mode==='exam') {
+      const correctOpt = opts.find(o=>o.correct);
+      const _eq=sessionQ[current]; examMistakes.push({q:_eq.question,chosen:btn.querySelector('span:last-child').textContent,correct:correctOpt?correctOpt.text.replace(/^[A-Eа-еА-Е][.)]\s*/,''):''});
+      saveErrorQuestion(_eq,'exam');
+    } else {
+      btn.classList.add('wrong');
+      container.querySelectorAll('.option-btn').forEach((b,i)=>{
+        if(opts[i]?.correct) b.classList.add('reveal-correct');
+      });
+      saveErrorQuestion(sessionQ[current],'study');
+      const msg=pickEncourage(ENCOURAGE_WRONG,_recentW);
+      fb.innerHTML=`<span style="margin-right:8px">❌</span>${msg}`;
+      fb.className='feedback wrong';
+      fb.style.display='block';
+    }
+  }
+  if(mode==='exam') btn.classList.add('selected');
+  document.getElementById('scoreText').textContent=`✓ ${score}`;
+  show('nextBtn');
+}
+
+function nextQuestion() {
+  current++;
+  if(current>=sessionQ.length) showResults(); else renderQuestion();
+}
+
+function toggleMultiOption(btn, idx, container) {
+  if(answered) return;
+  const sel = container._sel;
+  if(sel.has(idx)) { sel.delete(idx); btn.classList.remove('selected'); }
+  else { sel.add(idx); btn.classList.add('selected'); }
+  const cb = document.getElementById('checkBtn');
+  if(cb) cb.disabled = sel.size === 0;
+}
+
+function checkMultiAnswers() {
+  if(answered) return;
+  answered = true;
+  const container = document.getElementById('optionsContainer');
+  const opts = container._opts;
+  const selected = container._sel;
+  const correctSet = new Set();
+  opts.forEach((o,i)=>{ if(o.correct) correctSet.add(i); });
+
+  const fullyCorrect = selected.size===correctSet.size &&
+    [...selected].every(i=>correctSet.has(i));
+
+  if(fullyCorrect) score++; else {
+    wrong++;
+    if(mode==='exam') {
+      const correctTexts=opts.filter((_,i)=>correctSet.has(i)).map(o=>o.text.replace(/^[A-Eа-еА-Е][.)]\s*/,''));
+      const chosenTexts=[...selected].map(i=>opts[i].text.replace(/^[A-Eа-еА-Е][.)]\s*/,''));
+      examMistakes.push({q:sessionQ[current].question,chosen:chosenTexts.join(', '),correct:correctTexts.join(', ')});
+    }
+  }
+
+  container.querySelectorAll('.option-btn').forEach((b,i)=>{
+    b.classList.add('disabled');
+    if(selected.has(i) && correctSet.has(i)) b.classList.add('correct-hit');
+    else if(selected.has(i) && !correctSet.has(i)) b.classList.add('wrong-hit');
+    else if(!selected.has(i) && correctSet.has(i)) b.classList.add('missed');
+  });
+
+  const fb = document.getElementById('feedback');
+  if(mode!=='exam') {
+    if(fullyCorrect) {
+      const msg=pickEncourage(ENCOURAGE_CORRECT,_recentC);
+      fb.innerHTML=`<span style="margin-right:8px">✅</span>${msg}`;
+      fb.className='feedback correct';
+    } else {
+      const msg=pickEncourage(ENCOURAGE_WRONG,_recentW);
+      fb.innerHTML=`<span style="margin-right:8px">❌</span>${msg}`;
+      fb.className='feedback wrong';
+    }
+    fb.style.display='block';
+  }
+  document.getElementById('scoreText').textContent=`✓ ${score}`;
+  hide('checkBtn');
+  show('nextBtn');
+}
+function skipQuestion() {
+  if(mode!=='study') return;
+  current++;
+  if(current>=sessionQ.length) showResults(); else renderQuestion();
+}
+
+function showResults() {
+  clearInterval(timerInterval);
+  hide('quiz'); show('results');
+  const total=sessionQ.length;
+  const pct=Math.round((score/total)*100);
+  document.getElementById('resCorrect').textContent=score;
+  document.getElementById('resWrong').textContent=wrong;
+  document.getElementById('resTotal').textContent=total;
+  document.getElementById('resultPct').textContent=pct+'%';
+  const circ=408.41;
+  const ring=document.getElementById('ringFill');
+  setTimeout(()=>{ring.style.strokeDashoffset=circ-(pct/100)*circ;},100);
+  let title,tagline,ringClass;
+  if(pct>=90) {
+    title='Блестяще! Ты готов к экзамену 🏆';
+    tagline='Пятёрка в кармане! Продолжай в том же духе.';
+    ringClass='good'; launchConfetti();
+  } else if(pct>=75) {
+    title='Отличный результат! 🎉';
+    tagline='Ещё немного — и пятёрка гарантирована. Повтори сложные темы.';
+    ringClass='good';
+  } else if(pct>=60) {
+    title='Хороший старт! 💪';
+    tagline='Ты на правильном пути. Пройди ещё раз — станет лучше!';
+    ringClass='ok';
+  } else {
+    title='Не сдавайся! 🔥';
+    tagline='Каждый прогон делает тебя сильнее. Давай ещё раз!';
+    ringClass='bad';
+  }
+  ring.className=`ring-fill ${ringClass}`;
+  document.getElementById('resultTitle').textContent=title;
+  document.getElementById('resultTagline').textContent=tagline;
+  if(mode==='exam') saveExamResult(score, sessionQ.length);
+  const ms=document.getElementById('mistakesSection');
+  const ml=document.getElementById('mistakesList');
+  if(mode==='exam' && examMistakes.length>0) {
+    document.getElementById('mistakesCount').textContent=examMistakes.length;
+    ml.innerHTML=''; ml.dataset.built='';
+    ms.classList.remove('hidden');
+    ml.classList.add('hidden');
+    ms.querySelector('.btn-outline').innerHTML=`📋 Разобрать ошибки: <span id="mistakesCount">${examMistakes.length}</span>`;
+  } else {
+    ms.classList.add('hidden');
+  }
+}
+
+
+
+// ── localStorage helpers ──
+function errKey(src) { return 'medfak_err_' + src + '_' + currentExam.id; }
+function statKey() { return 'medfak_stat_' + currentExam.id; }
+function getErrors(src) { try { return JSON.parse(localStorage.getItem(errKey(src))||'[]'); } catch(e){return[];} }
+function getStats()  { try { return JSON.parse(localStorage.getItem(statKey())||'[]'); } catch(e){return[];} }
+function saveErrors(src,arr) { localStorage.setItem(errKey(src), JSON.stringify(arr)); }
+function saveStats(arr)  { localStorage.setItem(statKey(), JSON.stringify(arr)); }
+
+function updateBadges() {
+  const errs = [...new Map([...getErrors('exam'),...getErrors('study')].map(e=>[e.question,e])).values()];
+  const stats = getStats();
+  const eb = document.getElementById('errBadge');
+  const sb = document.getElementById('statBadge');
+  if(eb) eb.textContent = errs.length + ' ошибок';
+  if(sb) sb.textContent = stats.length + ' попыток';
+}
+
+// ── Сохраняем ошибку ──
+function saveErrorQuestion(q, src) {
+  const errs = getErrors(src);
+  if(!errs.find(e=>e.question===q.question)) {
+    errs.push(q);
+    saveErrors(src, errs);
+  }
+}
+
+// ── Сохраняем результат экзамена ──
+function saveExamResult(score, total) {
+  const stats = getStats();
+  stats.unshift({
+    date: new Date().toLocaleDateString('ru-RU'),
+    score, total,
+    pct: Math.round(score/total*100)
+  });
+  if(stats.length > 30) stats.length = 30;
+  saveStats(stats);
+}
+
+// ── Экран ошибок ──
+function renderErrList(qs) {
+  if(!qs.length) return '<div style="color:var(--muted);font-size:.82rem;padding:8px 0;">Ошибок нет 🎉</div>';
+  return '<div class="browse-list">' + qs.map((q,i)=>{
+    const opts=q.options.map(o=>`<div class="browse-opt${o.correct?' correct':''}">${o.correct?'✓ ':' '}${o.text}</div>`).join('');
+    return `<div class="browse-item"><div class="browse-num">${i+1}</div><div class="browse-q">${q.question}</div>${opts}</div>`;
+  }).join('') + '</div>';
+}
+
+function showErrors() {
+  hide('modeScreen'); show('errorsScreen');
+  const exam = getErrors('exam');
+  const study = getErrors('study');
+  const el = document.getElementById('errorsContent');
+  if(!exam.length && !study.length) {
+    el.innerHTML='<div class="errors-empty"><div class="big">🎉</div>Ошибок нет — ты всё знаешь!</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="font-weight:700;font-size:.85rem;color:#fb7185;margin:8px 0 6px;">🎯 Из экзамена (${exam.length})</div>
+    ${renderErrList(exam)}
+    <div style="font-weight:700;font-size:.85rem;color:#60a5fa;margin:16px 0 6px;">📖 Из учебного режима (${study.length})</div>
+    ${renderErrList(study)}
+    <button class="clear-btn" onclick="clearErrors()">🗑 Очистить все ошибки</button>`;
+}
+
+function clearErrors() {
+  if(confirm('Очистить все ошибки?')) {
+    saveErrors('exam',[]); saveErrors('study',[]);
+    showErrors(); updateBadges();
+  }
+}
+
+// ── Экран статистики ──
+function showStats() {
+  hide('modeScreen'); show('statsScreen');
+  const stats = getStats();
+  const el = document.getElementById('statsContent');
+  if(!stats.length) {
+    el.innerHTML = '<div class="errors-empty"><div class="big">📊</div>Пока нет данных — сдай экзамен!</div>';
+    return;
+  }
+  const avg = Math.round(stats.reduce((s,r)=>s+r.pct,0)/stats.length);
+  const best = Math.max(...stats.map(r=>r.pct));
+  const summary = `<div class="stat-summary">
+    <div><div class="sv">${stats.length}</div><div class="sk">попыток</div></div>
+    <div><div class="sv">${avg}%</div><div class="sk">средний</div></div>
+    <div><div class="sv">${best}%</div><div class="sk">лучший</div></div>
+  </div>`;
+  const rows = stats.map(r => {
+    const cls = r.pct>=75?'good':r.pct>=60?'ok':'bad';
+    return `<div class="stat-row"><span class="s-date">${r.date}</span><span class="s-score ${cls}">${r.score}/${r.total} · ${r.pct}%</span></div>`;
+  }).join('');
+  el.innerHTML = summary + `<div class="stat-history">${rows}</div>
+    <button class="clear-btn" onclick="clearStats()">🗑 Очистить историю</button>`;
+}
+
+function clearStats() {
+  if(confirm('Очистить статистику?')) { saveStats([]); showStats(); updateBadges(); }
+}
+
+async function startBrowse() {
+  hide('modeScreen'); show('browseScreen');
+  document.getElementById('browseTitleText').textContent = currentExam.title;
+  document.getElementById('browseSearch').value = '';
+  renderBrowse(currentExam.questions);
+}
+
+function renderBrowse(qs) {
+  const list = document.getElementById('browseList');
+  list.innerHTML = '';
+  qs.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'browse-item';
+    const opts = q.options.map(o =>
+      `<div class="browse-opt${o.correct?' correct':''}">${o.correct?'✓ ':' '}${o.text}</div>`
+    ).join('');
+    div.innerHTML = `<div class="browse-num">Вопрос ${i+1}</div><div class="browse-q">${q.question}</div>${opts}`;
+    list.appendChild(div);
+  });
+}
+
+function filterBrowse(val) {
+  const v = val.toLowerCase();
+  const qs = v ? currentExam.questions.filter(q =>
+    q.question.toLowerCase().includes(v) ||
+    q.options.some(o => o.text.toLowerCase().includes(v))
+  ) : currentExam.questions;
+  renderBrowse(qs);
+}
+
+function toggleMistakes() {
+  const list=document.getElementById('mistakesList');
+  const btn=document.querySelector('#mistakesSection .btn-outline');
+  if(list.classList.contains('hidden')) {
+    if(!list.dataset.built) {
+      examMistakes.forEach((m,i)=>{
+        const d=document.createElement('div');
+        d.className='mistake-item';
+        d.innerHTML=`<div class="mistake-q"><span class="mistake-num">${i+1}</span>${m.q}</div><div class="mistake-wrong">❌ Вы ответили: ${m.chosen}</div><div class="mistake-right">✅ Правильно: ${m.correct}</div>`;
+        list.appendChild(d);
+      });
+      list.dataset.built='1';
+    }
+    list.classList.remove('hidden');
+    btn.innerHTML=`▲ Скрыть ошибки`;
+  } else {
+    list.classList.add('hidden');
+    btn.innerHTML=`📋 Разобрать ошибки: <span id="mistakesCount">${examMistakes.length}</span>`;
+  }
+}
+
+function launchConfetti() {
+  const colors=['#6c63ff','#ff6584','#4ade80','#fbbf24','#60a5fa','#f472b6'];
+  for(let i=0;i<100;i++) {
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='confetti-piece';
+      el.style.left=Math.random()*100+'vw';
+      el.style.background=colors[Math.floor(Math.random()*colors.length)];
+      el.style.width=(Math.random()*8+5)+'px';
+      el.style.height=(Math.random()*8+5)+'px';
+      el.style.borderRadius=Math.random()>.5?'50%':'2px';
+      el.style.animationDuration=(Math.random()*2+2)+'s';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),4500);
+    },i*28);
+  }
+}
+
+// INIT
+if(window.Telegram?.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+buildLobby();
+</script>
+</body>
+</html>

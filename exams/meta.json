@@ -1,0 +1,66 @@
+[
+  {
+    "id": "terapiya",
+    "title": "Терапия",
+    "icon": "🩺",
+    "desc": "500 вопросов · 4 курс 8 семестр",
+    "color": "#6c63ff",
+    "ready": true
+  },
+  {
+    "id": "farmakologiya",
+    "title": "Фармакология",
+    "icon": "💊",
+    "desc": "400 вопросов · 4 курс 8 семестр",
+    "color": "#f59e0b",
+    "ready": true
+  },
+  {
+    "id": "pediatriya",
+    "title": "Педиатрия",
+    "icon": "👶",
+    "desc": "500 вопросов · 4 курс 8 семестр",
+    "color": "#ec4899",
+    "ready": true
+  },
+  {
+    "id": "farma_kredit",
+    "title": "Фармакология 6 семестр",
+    "icon": "💉",
+    "desc": "400 вопросов · пересдача 6 сем",
+    "color": "#06b6d4",
+    "ready": true
+  },
+  {
+    "id": "gigiyena",
+    "title": "Гигиена",
+    "icon": "🌿",
+    "desc": "400 вопросов · 3 курс",
+    "color": "#22c55e",
+    "ready": true
+  },
+  {
+    "id": "nevrologiya",
+    "title": "Неврология",
+    "icon": "🧠",
+    "desc": "400 вопросов · 4 курс · 8 семестр",
+    "color": "#a78bfa",
+    "ready": true
+  },
+  {
+    "id": "assistant",
+    "title": "Патфизиология",
+    "icon": "🧬",
+    "desc": "200 вопросов · 4 курс 8 семестр",
+    "color": "#a855f7",
+    "ready": true
+  },
+  {
+    "id": "soon3",
+    "title": "Скоро...",
+    "icon": "📖",
+    "desc": "Вопросы для пересдачи в разработке",
+    "color": "#475569",
+    "ready": false
+  }
+]
