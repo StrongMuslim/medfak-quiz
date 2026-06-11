@@ -1273,10 +1273,11 @@ function shareBot() {
 
 function reportError() {
   closeSharePopup();
+  const url = 'https://t.me/medfak_kg_bot?start=error';
   if(window.Telegram?.WebApp) {
-    Telegram.WebApp.openTelegramLink('https://t.me/medfak_kg_bot');
+    Telegram.WebApp.openTelegramLink(url);
   } else {
-    window.open('https://t.me/medfak_kg_bot', '_blank');
+    window.open(url, '_blank');
   }
 }
 
