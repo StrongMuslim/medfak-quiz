@@ -578,7 +578,7 @@ async function loadMeta() {
   const r = await fetch('exams/meta.json');
   const meta = await r.json();
   EXAMS = meta.map(m => ({...m, questions: null}));
-  renderExamGrid();
+  buildLobby();
 }
 
 async function loadExamQuestions(id) {
@@ -1211,7 +1211,7 @@ if(window.Telegram?.WebApp) {
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
 }
-buildLobby();
+loadMeta();
 </script>
 </body>
 </html>
