@@ -410,9 +410,9 @@
       <p>Выбери предмет и начни готовиться</p>
     </div>
     <div class="exam-list" id="examList"></div>
-    <a href="https://t.me/medfak_kg_bot" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;padding:13px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);border-radius:14px;color:#a78bfa;text-decoration:none;font-size:.9rem;font-weight:600;">
-      <span style="font-size:1.2rem">✈️</span> Открыть бота в Telegram
-    </a>
+    <button onclick="reportError()" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;padding:13px;width:100%;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:14px;color:#fca5a5;font-size:.9rem;font-weight:600;cursor:pointer;">
+      <span style="font-size:1.2rem">✏️</span> Нашёл ошибку — написать боту
+    </button>
   </div>
 
   <!-- DUA MODAL -->
@@ -1248,13 +1248,9 @@ function toggleMistakes() {
 
 
 function showSharePopup() {
-  const last = localStorage.getItem('medfak_popup_shown');
-  const now = Date.now();
-  if(last && now - parseInt(last) < 24*60*60*1000) return; // раз в сутки
   setTimeout(() => {
     document.getElementById('sharePopup').classList.add('visible');
   }, 1200);
-  localStorage.setItem('medfak_popup_shown', now);
 }
 
 function closeSharePopup(e) {
